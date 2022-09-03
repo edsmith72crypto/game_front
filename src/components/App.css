@@ -1,0 +1,77 @@
+/* Styles go here */
+.plusCentre {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    
+    transform: translate(-50%, -50%);
+    
+    /*width: 40%;*/
+    height: 50%;
+    min-width: 1024px;
+}
+
+.topCentre {
+    position: absolute;
+    left: 50%;
+    top: 45%;
+    
+    transform: translate(-50%, -50%);
+    
+    width: 40%;
+}
+
+.navbarBack {
+    background-color:#483D8B;
+    color: #FFFFFF;
+}
+
+.tab-list {
+    border-bottom: 1px solid #ccc;
+    padding-left: 0;
+}
+
+.tab-list-item {
+    display: inline-block;
+    list-style: none;
+    margin-bottom: -1px;
+    padding: 0.5rem 0.75rem;
+}
+
+.tab-list-active {
+    background-color: #DDDDDD;
+    border: solid #ccc;
+    border-width: 1px 1px 0 1px;
+}
+
+.divInline {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    margin: 5px 5px 5px 0px;
+}
+
+.inputFieldWidth {
+    width: 50%;
+    min-width: 185px;
+}
+
+.cell1 {
+    background-color:#cfc7ff;
+    color: #000000;
+}
+
+.cell2 {
+    background-color:#9f99c7;
+    color: #000000;
+}
+
+.cell3 {
+    background-color:#7e799e;
+    color: #000000;
+}
+
+.cell4 {
+    background-color:#696585;
+    color: #000000;
+}
