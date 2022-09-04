@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 //import IERC20 from '../abis/IERC20.json';
 //import MasterMeerkat from '../abis/MasterMeerkat.json'
 
-class Vaults extends Component {
+class Farms extends Component {
   constructor(props) {
     super(props);
 
@@ -36,8 +36,8 @@ class Vaults extends Component {
     this.props.approveTokenMasterPoly(_token);
   }
 
-  updateVogonAllowance(_token){
-    this.props.approveTokenVogonPoly(_token);
+  updateZapperAllowance(_token){
+    this.props.approveTokenZapperPoly(_token);
   }
 
   async componentDidMount() {
@@ -58,19 +58,24 @@ class Vaults extends Component {
     console.log(stakedLP["amount"]);
   }
 
+  updateInputField(_from, _to){
+    document.getElementById(_to).value = document.getElementById(_from).innerHTML;
+  }
+
   render() {
     return (
-      <div id="content">
+      <div id="content" className="modalPadding">
+        <p><span onClick={this.props.closeFarmModal} className="customLink closeButton">Close</span>&nbsp;&nbsp;&nbsp;&nbsp;<span onClick={this.props.updatePoolInfo} className="customLink closeButton">Update farm info</span></p>
         <div className="row">
           <div className="column cell1">
             <p>MMF farm (MMF Polygon)</p>
-            <p>Available balance: <span id="mmfBalanceFarm">{ this.props.web3.utils.fromWei(this.props.polyTokenBalance[0], "ether") }</span></p>
+            <p>Balance: <span id="mmfBalanceFarm" className="customLink" onClick={(event) => {this.updateInputField("mmfBalanceFarm","depositMMFSingleValue");}}>{ this.props.web3.utils.fromWei(this.props.polyTokenBalance[0], "ether") }</span></p>
             <input
                   id="depositMMFSingleValue"
                   type="text"
                   ref={(input) => { this.depositMMFSingleValue = input }}
-                  className="form-control"
-                  defaultValue="0"
+                  className="form-control inputFieldWidth"
+                  defaultValue=""
                   placeholder="Deposit" />
             { this.props.polyTokenMasterAllowance[0] <= 0 ? <button id="mmfApproveButton" type="button" className="btn btn-primary" onClick={(event) => {
                 event.preventDefault();
@@ -81,10 +86,6 @@ class Vaults extends Component {
               this.props.depositFarm(0, _depositValue);
             }}>Deposit MMF</button>}
             
-            <button id="mmfPendingButton" type="button" className="btn btn-primary" onClick={(event) => {
-              event.preventDefault();
-              this.props.getPending(0);
-            }}>Pending MMF</button>
             <button id="mmfWithdrawButton" type="button" className="btn btn-primary" onClick={(event) => {
               event.preventDefault();
               const _depositValue = (this.depositMMFSingleValue.value).toString()
@@ -94,7 +95,6 @@ class Vaults extends Component {
           <div className="column cell2">
             <p>MMF-WMATIC farm (MMF Polygon)</p>
             <div>
-              <p>Zap in!</p>
               <div className="divInline">
                 <input
                     id="maticZapAmount"
@@ -121,9 +121,9 @@ class Vaults extends Component {
                     className="form-control inputFieldWidth"
                     defaultValue=""
                     placeholder="Zap in with MMF" />
-                { this.props.polyTokenVogonAllowance[0] <= 0 ? <button id="mmfApproveButton" type="button" className="btn btn-primary" onClick={(event) => {
+                { this.props.polyTokenZapperAllowance[0] <= 0 ? <button id="mmfApproveButton" type="button" className="btn btn-primary" onClick={(event) => {
                   event.preventDefault();
-                  this.updateVogonAllowance(0);
+                  this.updateZapperAllowance(0);
                 }}>Approve MMF</button> : <button id="mmfWmaticZapMmfButton" type="button" className="btn btn-primary" onClick={(event) => {
                   event.preventDefault();
                   if(this.mmfZapAmount.value === "" || this.mmfZapAmount.value === 0 || this.mmfZapAmount.value === "0"){
@@ -135,50 +135,62 @@ class Vaults extends Component {
                 }}>MMF Zap</button>}
               </div>
             </div>
-            <p>Available balance: <span id="mmfWmaticBalanceFarm">{ this.props.web3.utils.fromWei(this.props.polyTokenBalance[2], "ether") }</span></p>
+            <p>Balance: <span id="mmfWmaticBalanceFarm" className="customLink" onClick={(event) => {this.updateInputField("mmfWmaticBalanceFarm","depositMMFWMATICValue");}}>{ this.props.web3.utils.fromWei(this.props.polyTokenBalance[2], "ether") }</span></p>
             <input
                   id="depositMMFWMATICValue"
                   type="text"
-                  ref={(input) => { this.depositMMFSingleValue = input }}
-                  className="form-control"
-                  defaultValue="0"
+                  ref={(input) => { this.depositMMFWMATICValue = input }}
+                  className="form-control inputFieldWidth"
+                  defaultValue=""
                   placeholder="Deposit" />
             { this.props.polyTokenMasterAllowance[2] <= 0 ? <button id="mmfWmaticApproveButton" type="button" className="btn btn-primary" onClick={(event) => {
                 event.preventDefault();
                 this.updateAllowance(2);
             }}>Approve MMF-WMATIC</button> : <button id="mmfWmaticDepositButton" type="button" className="btn btn-primary" onClick={(event) => {
               event.preventDefault();
-              const _depositValue = (this.depositMMFSingleValue.value).toString();
+              const _depositValue = (this.depositMMFWMATICValue.value).toString();
               this.props.depositFarm(1, _depositValue);
-            }}>Deposit MMF-WMATIC</button>}
+            }}>Deposit MMF-WMATIC</button>}<br/>
+            <p>Staked LP: <span id="mmfWmaticStakedFarm" className="customLink" onClick={(event) => {this.updateInputField("mmfWmaticStakedFarm","withdrawMMFWMATICValue");}}>{ this.props.web3.utils.fromWei(this.props.polyTokenPoolBalance[0], "ether") }</span><br/>
+            Pending MMF: <span id="mmfWmaticPendingFarm">{ this.props.web3.utils.fromWei(this.props.polyTokenPoolPending[0], "ether") }</span></p>
+            <input
+                  id="withdrawMMFWMATICValue"
+                  type="text"
+                  ref={(input) => { this.withdrawMMFWMATICValue = input }}
+                  className="form-control inputFieldWidth"
+                  defaultValue=""
+                  placeholder="Deposit" />
             <button id="mmfWmaticWithdrawButton" type="button" className="btn btn-primary" onClick={(event) => {
               event.preventDefault();
-              const _depositValue = (this.depositMMFSingleValue.value).toString()
+              const _depositValue = (this.withdrawMMFWMATICValue.value).toString()
               this.props.withdrawFarm(1, _depositValue);
-            }}>Withdraw MMF</button><br/><br/>
+            }}>Withdraw MMF</button>
+            <button id="mmfWmaticClaimRewardsButton" type="button" className="btn btn-primary" onClick={(event) => {
+              event.preventDefault();
+              this.props.claimRewardsFarm(1);
+            }}>Claim rewards</button><br/><br/>
           </div>
           <div className="column cell3">
             <p>MMF-USDC farm (MMF Polygon)</p>
             <div>
-              <p>Zap in!</p>
               <div className="divInline">
                 <input
                     id="usdcZapAmount"
                     type="text"
-                    ref={(input) => { this.maticZapAmount = input }}
+                    ref={(input) => { this.usdcZapAmount = input }}
                     className="form-control inputFieldWidth"
                     defaultValue=""
                     placeholder="Zap in with USDC" />
-                { this.props.polyTokenVogonAllowance[3] <= 0 ? <button id="mmfApproveButton" type="button" className="btn btn-primary" onClick={(event) => {
+                { this.props.polyTokenZapperAllowance[3] <= 0 ? <button id="usdcApproveButton" type="button" className="btn btn-primary" onClick={(event) => {
                   event.preventDefault();
-                  this.updateVogonAllowance(3);
-                }}>Approve USDC</button> : <button id="mmfWmaticZapWmaticButton" type="button" className="btn btn-primary" onClick={(event) => {
+                  this.updateZapperAllowance(3);
+                }}>Approve USDC</button> : <button id="mmfUsdcZapUsdcButton" type="button" className="btn btn-primary" onClick={(event) => {
                   event.preventDefault();
-                  if(this.maticZapAmount.value === "" || this.maticZapAmount.value === 0 || this.maticZapAmount.value === "0"){
+                  if(this.usdcZapAmount.value === "" || this.usdcZapAmount.value === 0 || this.usdcZapAmount.value === "0"){
                     return;
                   }
 
-                  const _zapValue = (this.maticZapAmount.value).toString()
+                  const _zapValue = (this.usdcZapAmount.value).toString()
                   this.props.zapInToken(3, 4, _zapValue);
                 }}>USDC Zap</button>}
               </div>
@@ -190,9 +202,9 @@ class Vaults extends Component {
                     className="form-control inputFieldWidth"
                     defaultValue=""
                     placeholder="Zap in with MMF" />
-                { this.props.polyTokenVogonAllowance[0] <= 0 ? <button id="mmfApproveButton" type="button" className="btn btn-primary" onClick={(event) => {
+                { this.props.polyTokenZapperAllowance[0] <= 0 ? <button id="mmf2ApproveButton" type="button" className="btn btn-primary" onClick={(event) => {
                   event.preventDefault();
-                  this.updateVogonAllowance(0);
+                  this.updateZapperAllowance(0);
                 }}>Approve MMF</button> : <button id="mmfUsdcZapMmfButton" type="button" className="btn btn-primary" onClick={(event) => {
                   event.preventDefault();
                   if(this.mmf2ZapAmount.value === "" || this.mmf2ZapAmount.value === 0 || this.mmf2ZapAmount.value === "0"){
@@ -204,13 +216,13 @@ class Vaults extends Component {
                 }}>MMF Zap</button>}
               </div>
             </div>
-            <p>Available balance: <span id="mmfUsdcBalanceFarm">{ this.props.web3.utils.fromWei(this.props.polyTokenBalance[4], "ether") }</span></p>
+            <p>Balance: <span id="mmfUsdcBalanceFarm" className="customLink" onClick={(event) => {this.updateInputField("mmfUsdcBalanceFarm","depositMMFUSDCValue");}}>{ this.props.web3.utils.fromWei(this.props.polyTokenBalance[4], "ether") }</span></p>
             <input
                   id="depositMMFUSDCValue"
                   type="text"
                   ref={(input) => { this.depositMMFUSDCValue = input }}
-                  className="form-control"
-                  defaultValue="0"
+                  className="form-control inputFieldWidth"
+                  defaultValue=""
                   placeholder="Deposit" />
             { this.props.polyTokenMasterAllowance[4] <= 0 ? <button id="mmfUsdcApproveButton" type="button" className="btn btn-primary" onClick={(event) => {
                 event.preventDefault();
@@ -232,4 +244,4 @@ class Vaults extends Component {
   }
 }
 
-export default Vaults;
+export default Farms;

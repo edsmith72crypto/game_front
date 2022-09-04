@@ -53,25 +53,63 @@
 
 .inputFieldWidth {
     width: 50%;
-    min-width: 185px;
+    min-width: 190px;
+}
+
+.farmBox{
+    width: 1024px;
+    background-color: #FFFFFF;
+}
+
+.modalPadding{
+    padding: 5px;
+}
+
+.customLink{
+    cursor:pointer;
+}
+
+.closeButton {
+    border-color:#000000;
+    border-style: solid;
+    border-radius: 5px;
+    font-size: 1.2em;
+    padding: 0px 10px 0px 10px;
+    color: #000000;
 }
 
 .cell1 {
-    background-color:#cfc7ff;
+    border-color:#cfc7ff;
+    border-style: groove;
+    border-radius: 10px;
+    padding: 5px;
+    min-width: 330px;
     color: #000000;
 }
 
 .cell2 {
-    background-color:#9f99c7;
+    border-color:#9f99c7;
+    border-style: groove;
+    border-radius: 10px;
+    padding: 5px;
+    min-width: 330px;
     color: #000000;
 }
 
 .cell3 {
-    background-color:#7e799e;
+    border-color:#7e799e;
+    border-style: groove;
+    border-radius: 10px;
+    padding: 5px;
+    min-width: 330px;
     color: #000000;
 }
 
 .cell4 {
-    background-color:#696585;
+    border-color:#696585;
+    border-style: groove;
+    border-radius: 10px;
+    padding: 5px;
+    min-width: 330px;
     color: #000000;
 }
