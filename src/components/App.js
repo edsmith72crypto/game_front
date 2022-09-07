@@ -63,8 +63,7 @@ class App extends Component {
     this.getPending = this.getPending.bind(this)
     this.zapInToken = this.zapInToken.bind(this)
 
-    this.vaultContractAddr = "0x94b259E3c644500D3a32980a9054a7D60415Ab97"; //Ganache mainnet
-    this.zapperContractAddr = "0x0278863D89C299c4484BB2643E193446D6f73A22"; //Ganache mainnet
+    this.zapperContractAddr = "0x6063bc19b6929842EEED2Eb42F614b245d959a65"; //Polygon mainnet
     
     this.croTokenAddress = [];
     this.croTokenAddress[0] = "0x97749c9B61F878a880DfE312d2594AE07AEd7656"; //MMF (C)
@@ -80,18 +79,23 @@ class App extends Component {
     this.polyTokenAddress[4] = "0x8AB47799cB0d49aEB9E3a47c369813a3a3236790"; //MMF-USDC LP, pool 2
     this.polyTokenContract = [];
     
-    this.polyLPTokenPool = [];
-    this.polyLPTokenPool[0] = 1; //MMF-MATIC LP is pool 1
-    this.polyLPTokenPool[1] = 2; //MMF-USDC LP is pool 2
+    window.POLY_MMF_POOL_POS = 0;
+    window.POLY_MMF_WMATIC_POOL_POS = 1;
+    window.POLY_MMF_USDC_POOL_POS = 2;
+    this.polyLPTokenPool = []; //TODO this is off whack with the pool id master transfer timer
+    this.polyLPTokenPool[window.POLY_MMF_WMATIC_POOL_POS] = 1; //MMF-MATIC LP is pool 1
+    this.polyLPTokenPool[window.POLY_MMF_USDC_POOL_POS] = 2; //MMF-USDC LP is pool 2
+    this.polyLPTokenPool[window.POLY_MMF_POOL_POS] = 0; //MMF staking is pool 0
 
-    for(var i = 0; i < this.polyTokenAddress.length; i++){
-      this.state.polyTokenMasterAllowance[i] = 0;
-      this.state.polyTokenZapperAllowance[i] = 0;
-      this.state.polyTokenBalance[i] = 0;
+    var i;
+    for( i = 0; i < this.polyTokenAddress.length; i++){
+      this.state.polyTokenMasterAllowance[i] = "0";
+      this.state.polyTokenZapperAllowance[i] = "0";
+      this.state.polyTokenBalance[i] = "0";
     }
-    for(var i = 0; i < this.polyLPTokenPool.length; i++){
-      this.state.polyTokenPoolBalance[i] = 0;
-      this.state.polyTokenPoolPending[i] = 0;
+    for(i = 0; i < this.polyLPTokenPool.length; i++){
+      this.state.polyTokenPoolBalance[i] = "0";
+      this.state.polyTokenPoolPending[i] = "0";
     }
     
     this.allowanceZapperTimer = null;
@@ -102,70 +106,6 @@ class App extends Component {
     this.transferZapperTimerPid = 0;
     this.transferMasterTimer = null;
     this.transferMasterTimerPid = 0;
-  }
-
-  async updatePoolInfo(){
-    // Get pool balances
-    var _polyTokenPoolBalance = [];
-    var _polyTokenPoolPending = [];
-    for(var i = 0; i < this.polyLPTokenPool.length; i++){
-      // Get staked balance
-      var poolResp = await this.state.mmfMaster.methods.userInfo(this.polyLPTokenPool[i], this.state.account).call();
-      _polyTokenPoolBalance[i] = poolResp["amount"];
-      // Get pending balances
-      _polyTokenPoolPending[i] = await this.state.mmfMaster.methods.pendingMeerkat(this.polyLPTokenPool[i], this.state.account).call();
-    }
-    this.setState({ polyTokenPoolBalance: _polyTokenPoolBalance });
-    this.setState({ polyTokenPoolPending: _polyTokenPoolPending });
-  }
-
-  async transferZapperUpdate(){
-    var oldValue = this.state.polyTokenBalance[this.transferZapperTimerPid];
-    var _polyTokenBalance = this.state.polyTokenBalance;
-    _polyTokenBalance[this.transferZapperTimerPid] = await this.polyTokenContract[this.transferZapperTimerPid].methods.balanceOf(this.state.account).call();
-    this.setState({ polyTokenBalance: _polyTokenBalance });
-
-    if(oldValue !== this.state.polyTokenBalance[this.transferZapperTimerPid]){
-      window.clearInterval(this.transferZapperTimer);
-      this.transferZapperTimer = null;
-    }
-  }
-
-  async transferMasterUpdate(){
-    var oldValue = this.state.polyTokenPoolBalance[this.transferMasterTimerPid];
-    var _polyTokenPoolBalance = this.state.polyTokenPoolBalance;
-    _polyTokenPoolBalance[this.transferMasterTimerPid] = await this.state.mmfMaster.methods.userInfo(this.polyLPTokenPool[this.transferMasterTimerPid], this.state.account).call();
-    this.setState({ polyTokenPoolBalance: _polyTokenPoolBalance });
-
-    if(oldValue !== this.state.polyTokenPoolBalance[this.transferMasterTimerPid]){
-      window.clearInterval(this.transferMasterTimer);
-      this.transferMasterTimer = null;
-    }
-  }
-
-  async allowanceZapperUpdate(){
-    var oldValue = this.state.polyTokenZapperAllowance[this.allowanceZapperTimerPid];
-    var _polyTokenZapperAllowance = this.state.polyTokenZapperAllowance;
-    _polyTokenZapperAllowance[this.allowanceZapperTimerPid] = await this.polyTokenContract[this.allowanceZapperTimerPid].methods.allowance(this.state.account, this.zapperContractAddr).call();
-    this.setState({ polyTokenZapperAllowance: _polyTokenZapperAllowance });
-
-    if(oldValue !== this.state.polyTokenZapperAllowance[this.allowanceZapperTimerPid]){
-      window.clearInterval(this.allowanceZapperTimer);
-      this.allowanceZapperTimer = null;
-    }
-  }
-
-  async allowanceMasterUpdate(){
-    console.log(this.allowanceMasterTimerPid);
-    var oldValue = this.state.polyTokenMasterAllowance[this.allowanceMasterTimerPid];
-    var _polyTokenMasterAllowance = this.state.polyTokenMasterAllowance;
-    _polyTokenMasterAllowance[this.allowanceMasterTimerPid] = await this.polyTokenContract[this.allowanceMasterTimerPid].methods.allowance(this.state.account, this.state.masterMeerkatPoly).call();
-    this.setState({ polyTokenMasterAllowance: _polyTokenMasterAllowance });
-
-    if(oldValue !== this.state.polyTokenMasterAllowance[this.allowanceMasterTimerPid]){
-      window.clearInterval(this.allowanceMasterTimer);
-      this.allowanceMasterTimer = null;
-    }
   }
 
   openFarmModal(){
@@ -206,6 +146,17 @@ class App extends Component {
         }
         else
           this.setState({ web3Connected: false });
+      }).on("connect", accounts => {
+        if (accounts.length > 0){
+          this.setState({ web3Connected: true });
+          this.loadBlockchainData()
+        }
+        else
+          this.setState({ web3Connected: false });
+      }).on("disconnect", accounts => {
+        this.setState({ loading: true});
+        this.setState({ web3Connected: false });
+        this.setState({ farmModal: false });
       });
     }
     else if (window.web3) {
@@ -233,9 +184,6 @@ class App extends Component {
       const mmfRouter = new web3.eth.Contract(MeerkatRouter.abi, this.state.meerkatRouter);
       this.setState({ mmfRouter });
 
-      // Get blockchain native balance
-      const balance = await web3.eth.getBalance(this.state.account);
-      console.log("CRO Balance: " + balance);
       const title = "Cronos crypto clicker";
       this.setState({ title: title });
 
@@ -253,6 +201,7 @@ class App extends Component {
 
       this.setState({ loading: false})
       this.setState({ farmLoading: false})
+      window.alert('Cronos in progress.');
 
     } else if(networkId === 137) { //Polygon chain ID
       const slartiZapper = new web3.eth.Contract(SlartiZapper.abi, this.zapperContractAddr)
@@ -267,17 +216,16 @@ class App extends Component {
       this.setState({ mmfRouter });
 
       // Name this place!
-      const title = "Test Polygon Crypto Farmer";
+      const title = "Polygon Crypto Farmer";
       this.setState({ title: title });
 
       // Set up LPs
-      const mmfMatic = new web3.eth.Contract(IBEP20.abi, this.polyTokenAddress[2]);
+      /*const mmfMatic = new web3.eth.Contract(IBEP20.abi, this.polyTokenAddress[2]);
       this.setState({ mmfMatic });
       var mmfMaticBalance = await mmfMatic.methods.balanceOf(this.state.account).call();
       console.log("MMF-MATIC balance: "+mmfMaticBalance.toString());
       const stakedLP = await this.state.mmfMaster.methods.userInfo(this.state.mmfMaticPoolId, this.state.account).call();
-      this.setState({ mmfMaticStaked: stakedLP });
-      console.log("MMF-MATIC LP balance: "+stakedLP["amount"].toString());
+      console.log("MMF-MATIC LP balance: "+stakedLP["amount"].toString());*/
 
       this.setState({ loading: false});
       
@@ -285,7 +233,8 @@ class App extends Component {
       var _polyTokenMasterAllowance = [];
       var _polyTokenZapperAllowance = [];
       var _polyTokenBalance = [];
-      for(var i = 0; i < this.polyTokenAddress.length; i++){
+      var i;
+      for(i = 0; i < this.polyTokenAddress.length; i++){
         // Set up token contract
         this.polyTokenContract[i] = new web3.eth.Contract(IERC20.abi, this.polyTokenAddress[i]);
         // Get token balances
@@ -293,8 +242,6 @@ class App extends Component {
         // Retrieve token allowances for the MasterMeerkat contract
         _polyTokenMasterAllowance[i] = await this.polyTokenContract[i].methods.allowance(this.state.account, this.state.masterMeerkatPoly).call();
         // Retrieve token allowances for the SlartiZapper contract
-        _polyTokenZapperAllowance[i] = await this.polyTokenContract[i].methods.allowance(this.state.account, this.zapperContractAddr).call();
-        // Get token balance in farms
         _polyTokenZapperAllowance[i] = await this.polyTokenContract[i].methods.allowance(this.state.account, this.zapperContractAddr).call();
       }
       this.setState({ polyTokenMasterAllowance: _polyTokenMasterAllowance });
@@ -304,24 +251,24 @@ class App extends Component {
       // Get pool balances
       var _polyTokenPoolBalance = [];
       var _polyTokenPoolPending = [];
-      for(var i = 0; i < this.polyLPTokenPool.length; i++){
+      for(i = 0; i < this.polyLPTokenPool.length; i++){
         // Get staked balance
         var poolResp = await this.state.mmfMaster.methods.userInfo(this.polyLPTokenPool[i], this.state.account).call();
-        _polyTokenPoolBalance[i] = poolResp["amount"];
+        _polyTokenPoolBalance[i] = (poolResp["amount"]).toString();
         // Get pending balances
-        _polyTokenPoolPending[i] = await this.state.mmfMaster.methods.pendingMeerkat(this.polyLPTokenPool[i], this.state.account).call();
+        _polyTokenPoolPending[i] = (await this.state.mmfMaster.methods.pendingMeerkat(this.polyLPTokenPool[i], this.state.account).call()).toString();
       }
       this.setState({ polyTokenPoolBalance: _polyTokenPoolBalance });
       this.setState({ polyTokenPoolPending: _polyTokenPoolPending });
 
       this.setState({ farmLoading: false})
 
-      var mmfBalance = await this.polyTokenContract[3].methods.balanceOf(this.zapperContractAddr).call();
+      /*var mmfBalance = await this.polyTokenContract[3].methods.balanceOf(this.zapperContractAddr).call();
       console.log("Contract USDC: " + mmfBalance);
       mmfBalance = await this.polyTokenContract[4].methods.balanceOf(this.zapperContractAddr).call();
       console.log("Contract USDC LP: " + mmfBalance);
       mmfBalance = await this.polyTokenContract[0].methods.balanceOf(this.zapperContractAddr).call();
-      console.log("Contract MMF: " + mmfBalance);
+      console.log("Contract MMF: " + mmfBalance);*/
       //Get pending rewards
       //var pendingMMF = await mmfMaster.methods.pendingMeerkat(this.state.mmfMaticPoolId, this.state.account).call();
       //document.getElementById("totalMMFUSDC").innerHTML = pendingMMF;
@@ -332,9 +279,86 @@ class App extends Component {
 
   }
 
+  async updatePoolInfo(){
+    // Get account balances
+    var _polyTokenBalance = [];
+    var i;
+    for(i = 0; i < this.polyTokenAddress.length; i++){
+      _polyTokenBalance[i] = await this.polyTokenContract[i].methods.balanceOf(this.state.account).call();
+    }
+    this.setState({ polyTokenBalance: _polyTokenBalance });
+
+    // Get pool balances
+    var _polyTokenPoolBalance = [];
+    var _polyTokenPoolPending = [];
+    for(i = 0; i < this.polyLPTokenPool.length; i++){
+      // Get staked balance
+      var poolResp = await this.state.mmfMaster.methods.userInfo(this.polyLPTokenPool[i], this.state.account).call();
+      _polyTokenPoolBalance[i] = (poolResp["amount"]).toString();
+      // Get pending balances
+      _polyTokenPoolPending[i] = (await this.state.mmfMaster.methods.pendingMeerkat(this.polyLPTokenPool[i], this.state.account).call()).toString();
+    }
+    this.setState({ polyTokenPoolBalance: _polyTokenPoolBalance });
+    this.setState({ polyTokenPoolPending: _polyTokenPoolPending });
+  }
+
+  async transferZapperUpdate(){
+    console.log("ping");
+    var oldValue = this.state.polyTokenBalance[this.transferZapperTimerPid];
+    var _polyTokenBalance = this.state.polyTokenBalance;
+    _polyTokenBalance[this.transferZapperTimerPid] = (await this.polyTokenContract[this.transferZapperTimerPid].methods.balanceOf(this.state.account).call()).toString();
+    this.setState({ polyTokenBalance: _polyTokenBalance });
+
+    if(oldValue !== this.state.polyTokenBalance[this.transferZapperTimerPid]){
+      window.clearInterval(this.transferZapperTimer);
+      this.transferZapperTimer = null;
+    }
+  }
+
+  async transferMasterUpdate(){
+    console.log("ping");
+    var oldValue = this.state.polyTokenPoolBalance[this.transferMasterTimerPid];
+    var _polyTokenPoolBalance = this.state.polyTokenPoolBalance;
+    var poolResp = await this.state.mmfMaster.methods.userInfo(this.polyLPTokenPool[this.transferMasterTimerPid], this.state.account).call();
+    _polyTokenPoolBalance[this.transferMasterTimerPid] = (poolResp["amount"]).toString();
+    this.setState({ polyTokenPoolBalance: _polyTokenPoolBalance });
+
+    if(oldValue !== this.state.polyTokenPoolBalance[this.transferMasterTimerPid]){
+      window.clearInterval(this.transferMasterTimer);
+      this.transferMasterTimer = null;
+    }
+  }
+
+  async allowanceZapperUpdate(){
+    console.log("ping");
+    var oldValue = this.state.polyTokenZapperAllowance[this.allowanceZapperTimerPid];
+    var _polyTokenZapperAllowance = this.state.polyTokenZapperAllowance;
+    _polyTokenZapperAllowance[this.allowanceZapperTimerPid] = await this.polyTokenContract[this.allowanceZapperTimerPid].methods.allowance(this.state.account, this.zapperContractAddr).call();
+    this.setState({ polyTokenZapperAllowance: _polyTokenZapperAllowance });
+
+    if(oldValue !== this.state.polyTokenZapperAllowance[this.allowanceZapperTimerPid]){
+      window.clearInterval(this.allowanceZapperTimer);
+      this.allowanceZapperTimer = null;
+    }
+  }
+
+  async allowanceMasterUpdate(){
+    console.log("ping");
+    var oldValue = this.state.polyTokenMasterAllowance[this.allowanceMasterTimerPid];
+    var _polyTokenMasterAllowance = this.state.polyTokenMasterAllowance;
+    _polyTokenMasterAllowance[this.allowanceMasterTimerPid] = await this.polyTokenContract[this.allowanceMasterTimerPid].methods.allowance(this.state.account, this.state.masterMeerkatPoly).call();
+    this.setState({ polyTokenMasterAllowance: _polyTokenMasterAllowance });
+
+    if(oldValue !== this.state.polyTokenMasterAllowance[this.allowanceMasterTimerPid]){
+      window.clearInterval(this.allowanceMasterTimer);
+      this.allowanceMasterTimer = null;
+    }
+  }
+
   withdraw() {
     console.log("withdraw shit")
-    this.state.slartiZapper.methods.withdrawAll().send({ from: this.state.account })
+    const _gasPrice = window.web3.utils.toWei("50", "nanoether");
+    this.state.slartiZapper.methods.withdrawAll().send({ from: this.state.account, gasPrice: _gasPrice })
     .once('confirmation', (confirmationNumber, receipt) => {
       this.setState({ loading: false })
     }).catch(e => {
@@ -349,7 +373,7 @@ class App extends Component {
     })
   }
 
-  // Deposit ETH into contract, why tho?
+  // Deposit ETH into contract, y tho?
   deposit(_val) {
     console.log("deposit shit")
     let one_eth = window.web3.utils.toWei(_val, "ether");
@@ -376,11 +400,12 @@ class App extends Component {
     }
 
     console.log("deposit farm shit")
+    const _gasPrice = window.web3.utils.toWei("50", "nanoether");
 
     this.transferMasterTimer = window.setInterval(this.transferMasterUpdate, this.pollingInterval);
     this.transferMasterTimerPid = _pid;
     let _valWei = window.web3.utils.toWei(_val, "ether");
-    this.state.mmfMaster.methods.deposit(_pid, _valWei, "0xeEe7B54b19547e16987726e3A222bDfde7fb0344").send({ from: this.state.account })
+    this.state.mmfMaster.methods.deposit(this.polyLPTokenPool[_pid], _valWei, "0xeEe7B54b19547e16987726e3A222bDfde7fb0344").send({ from: this.state.account, gasPrice: _gasPrice })
     .once('confirmation', (confirmationNumber, receipt) => {
       this.setState({ loading: false })
     }).catch(e => {
@@ -392,6 +417,8 @@ class App extends Component {
         console.log(e.message)
         this.setState({ loading: false })
       }
+      window.clearInterval(this.transferMasterTimer);
+      this.transferMasterTimer = null;
     })
   }
 
@@ -403,10 +430,11 @@ class App extends Component {
     }
 
     console.log("claim farm shit")
+    const _gasPrice = window.web3.utils.toWei("50", "nanoether");
 
     this.transferMasterTimer = window.setInterval(this.transferMasterUpdate, this.pollingInterval);
     this.transferMasterTimerPid = _pid;
-    this.state.mmfMaster.methods.deposit(_pid, "0", "0xeEe7B54b19547e16987726e3A222bDfde7fb0344").send({ from: this.state.account })
+    this.state.mmfMaster.methods.deposit(this.polyLPTokenPool[_pid], "0", "0xeEe7B54b19547e16987726e3A222bDfde7fb0344").send({ from: this.state.account, gasPrice: _gasPrice })
     .once('confirmation', (confirmationNumber, receipt) => {
       this.setState({ loading: false })
     }).catch(e => {
@@ -418,22 +446,33 @@ class App extends Component {
         console.log(e.message)
         this.setState({ loading: false })
       }
+      window.clearInterval(this.transferMasterTimer);
+      this.transferMasterTimer = null;
     })
   }
 
   // Withdraw from MMF farm
-  withdrawFarm(_pid, _val) {
+  async withdrawFarm(_pid, _val) {
     // If not null, then a pending transaction is present
     if(this.transferMasterTimer != null){
       return;
     }
-    
-    console.log("withdraw farm shit")
+
+    // Check farm balance
+    let _valWei = window.web3.utils.toWei(_val, "ether");
+    var poolResp = await this.state.mmfMaster.methods.userInfo(this.polyLPTokenPool[_pid], this.state.account).call();
+    if(poolResp["amount"] < _valWei){
+      console.log("Insufficient balance");
+      return;
+    }
 
     this.transferMasterTimer = window.setInterval(this.transferMasterUpdate, this.pollingInterval);
     this.transferMasterTimerPid = _pid;
-    let _valWei = window.web3.utils.toWei(_val, "ether");
-    this.state.mmfMaster.methods.withdraw(_pid, _valWei).send({ from: this.state.account })
+    
+    console.log("withdraw farm shit")
+    const _gasPrice = window.web3.utils.toWei("50", "nanoether");
+
+    this.state.mmfMaster.methods.withdraw(this.polyLPTokenPool[_pid], _valWei).send({ from: this.state.account, gasPrice: _gasPrice })
     .once('confirmation', (confirmationNumber, receipt) => {
       this.setState({ loading: false })
     }).catch(e => {
@@ -445,6 +484,8 @@ class App extends Component {
         console.log(e.message)
         this.setState({ loading: false })
       }
+      window.clearInterval(this.transferMasterTimer);
+      this.transferMasterTimer = null;
     })
   }
 
@@ -456,12 +497,13 @@ class App extends Component {
     }
 
     console.log("zap shit")
+    const _gasPrice = window.web3.utils.toWei("50", "nanoether");
 
     this.transferZapperTimer = window.setInterval(this.transferZapperUpdate, this.pollingInterval);
     this.transferZapperTimerPid = _to;
     if(_from === 1){
       let _valWei = window.web3.utils.toWei(_val, "ether");
-      this.state.slartiZapper.methods.zapInETH(this.polyTokenAddress[_to]).send({ from: this.state.account, value: _valWei })
+      this.state.slartiZapper.methods.zapInETH(this.polyTokenAddress[_to]).send({ from: this.state.account, value: _valWei, gasPrice: _gasPrice })
       .once('confirmation', (confirmationNumber, receipt) => {
         console.log(receipt);
         this.setState({ loading: false })
@@ -474,6 +516,8 @@ class App extends Component {
           console.log(e.message)
           this.setState({ loading: false })
         }
+        window.clearInterval(this.transferZapperTimer);
+        this.transferZapperTimer = null;
       })
     }
     else{
@@ -484,7 +528,7 @@ class App extends Component {
       else{
         _valWei = window.web3.utils.toWei(_val, "ether");
       }
-      this.state.slartiZapper.methods.zapInToken(this.polyTokenAddress[_from], _valWei, this.polyTokenAddress[_to]).send({ from: this.state.account })
+      this.state.slartiZapper.methods.zapInToken(this.polyTokenAddress[_from], _valWei, this.polyTokenAddress[_to]).send({ from: this.state.account, gasPrice: _gasPrice })
       .once('confirmation', (confirmationNumber, receipt) => {
         console.log(receipt);
         this.setState({ loading: false })
@@ -513,7 +557,8 @@ class App extends Component {
     console.log("approve cronos shit")
     let approveAmount = window.web3.utils.toWei("1000000000000000000000000000000000000000000", "ether");
     
-    this.croTokenAddress[_token].methods.approve(this.state.masterMeerkat, approveAmount).send({ from: this.state.account })
+    const _gasPrice = window.web3.utils.toWei("50", "nanoether");
+    this.croTokenAddress[_token].methods.approve(this.state.masterMeerkat, approveAmount).send({ from: this.state.account, gasPrice: _gasPrice })
     .once('confirmation', (confirmationNumber, receipt) => {
       this.setState({ loading: false })
     }).catch(e => {
@@ -539,7 +584,8 @@ class App extends Component {
     this.allowanceMasterTimer = window.setInterval(this.allowanceMasterUpdate, this.pollingInterval);
     this.allowanceMasterTimerPid = _token;
     
-    this.polyTokenContract[_token].methods.approve(this.state.masterMeerkatPoly, approveAmount).send({ from: this.state.account })
+    const _gasPrice = window.web3.utils.toWei("50", "nanoether");
+    this.polyTokenContract[_token].methods.approve(this.state.masterMeerkatPoly, approveAmount).send({ from: this.state.account, gasPrice: _gasPrice })
     .once('confirmation', (confirmationNumber, receipt) => {
       console.log(receipt);
       var _polyTokenMasterAllowance = this.polyTokenMasterAllowance;
@@ -556,6 +602,8 @@ class App extends Component {
         console.log(e.message)
         this.setState({ loading: false })
       }
+      window.clearInterval(this.allowanceMasterTimer);
+      this.allowanceMasterTimer = null;
     })
   }
 
@@ -565,12 +613,16 @@ class App extends Component {
       return;
     }
     
-    console.log("approve polygon shit")
-    let approveAmount = window.web3.utils.toWei("1000000000000000000000000000000000000000000", "ether");
+    console.log("approve polygon zapper shit")
+    var approveAmount = window.web3.utils.toWei("1000000000000000000000000000000000000000000", "ether");
+    if(_token === 3){ //USDC only has 6 decimal places
+      approveAmount = window.web3.utils.toWei("1000000000000000000000000000000000000000000", "picoether");
+    }
     this.allowanceZapperTimer = window.setInterval(this.allowanceZapperUpdate, this.pollingInterval);
     this.allowanceZapperTimerPid = _token;
 
-    this.polyTokenContract[_token].methods.approve(this.zapperContractAddr, approveAmount).send({ from: this.state.account })
+    const _gasPrice = window.web3.utils.toWei("50", "nanoether");
+    this.polyTokenContract[_token].methods.approve(this.zapperContractAddr, approveAmount).send({ from: this.state.account, gasPrice: _gasPrice })
     .once('confirmation', (confirmationNumber, receipt) => {
       console.log(receipt);
       var _polyTokenAllowance = this.polyTokenZapperAllowance;
@@ -587,6 +639,8 @@ class App extends Component {
         console.log(e.message)
         this.setState({ loading: false })
       }
+      window.clearInterval(this.allowanceZapperTimer);
+      this.allowanceZapperTimer = null;
     })
   }
 
@@ -606,10 +660,9 @@ class App extends Component {
                     : this.state.loading
                       ? <div id="loader" className="text-center"><p className="text-center">Loading. Please wait...</p></div>
                       : 
-                      <div className="plusCentre">
-                        <p><span onClick={this.openFarmModal} className="customLink">Farms</span></p>
-                        <Game allowance={this.state.allowance} account={this.state.account} title={this.state.title} />
-                        <ReactModal isOpen={this.state.farmModal} contentLabel="Farm modal" className="farmBox plusCentre" >
+                      <div className="">
+                        <div className="links"><p><span onClick={this.openFarmModal} className="customLink">Farms</span></p></div>
+                        <ReactModal isOpen={this.state.farmModal} contentLabel="Farm modal" >
                           {!this.state.farmLoading
                           ? <Farms account={this.state.account} mmfMaster={this.state.mmfMaster} masterMeerkat={this.state.masterMeerkat} web3={this.state.web3}
                             polyTokenMasterAllowance={this.state.polyTokenMasterAllowance} polyTokenZapperAllowance={this.state.polyTokenZapperAllowance}
@@ -618,7 +671,9 @@ class App extends Component {
                             approveTokenMasterPoly={this.approveTokenMasterPoly} getPending={this.getPending} approveTokenZapperPoly={this.approveTokenZapperPoly}
                             withdrawFarm={this.withdrawFarm} zapInToken={this.zapInToken} closeFarmModal={this.closeFarmModal} updatePoolInfo={this.updatePoolInfo}/>
                           : <div id="loader" className="text-center"><p className="text-center">Loading farms. Please wait...</p></div>}
-                        </ReactModal></div>
+                        </ReactModal>
+                        <Game allowance={this.state.allowance} account={this.state.account} title={this.state.title}
+                          polyTokenBalance={this.state.polyTokenBalance} polyTokenPoolPending={this.state.polyTokenPoolPending} polyTokenPoolBalance={this.state.polyTokenPoolBalance}/></div>
                 }
               </div>
             </main>
