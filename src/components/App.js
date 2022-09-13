@@ -62,6 +62,7 @@ class App extends Component {
     this.withdrawFarm = this.withdrawFarm.bind(this)
     this.getPending = this.getPending.bind(this)
     this.zapInToken = this.zapInToken.bind(this)
+    this.swapTokens = this.swapTokens.bind(this)
 
     this.zapperContractAddr = "0x6063bc19b6929842EEED2Eb42F614b245d959a65"; //Polygon mainnet
     
@@ -70,22 +71,26 @@ class App extends Component {
     this.croTokenAddress[1] = "0x5C7F8A570d578ED84E63fdFA7b1eE72dEae1AE23"; //WCRO (C)
 
     // Supported tokens
-    this.polyTokenTotal = 5;
+    this.polyTokenTotal = 7;
     this.polyTokenAddress = [];
     this.polyTokenAddress[0] = "0x22a31bD4cB694433B6de19e0aCC2899E553e9481"; //MMF (P)
     this.polyTokenAddress[1] = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; //WMATIC (P)
     this.polyTokenAddress[2] = "0xD15EB8710E28C23993968e671807d572189CC86e"; //MMF-MATIC LP, pool 1
     this.polyTokenAddress[3] = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"; //USDC (P)
     this.polyTokenAddress[4] = "0x8AB47799cB0d49aEB9E3a47c369813a3a3236790"; //MMF-USDC LP, pool 2
+    this.polyTokenAddress[5] = "0x0d5665A2319526A117E68E38EBEA4610aA8298F8"; //MLP (P) (MMX)
+    this.polyTokenAddress[6] = "0xEADc377ed7b4f7eb26beB0a3F3CC2a574462188e"; //MMF-MLP LP, pool 2
     this.polyTokenContract = [];
     
     window.POLY_MMF_POOL_POS = 0;
     window.POLY_MMF_WMATIC_POOL_POS = 1;
     window.POLY_MMF_USDC_POOL_POS = 2;
+    window.POLY_MMF_MLP_POOL_POS = 3;
     this.polyLPTokenPool = []; //TODO this is off whack with the pool id master transfer timer
     this.polyLPTokenPool[window.POLY_MMF_WMATIC_POOL_POS] = 1; //MMF-MATIC LP is pool 1
     this.polyLPTokenPool[window.POLY_MMF_USDC_POOL_POS] = 2; //MMF-USDC LP is pool 2
     this.polyLPTokenPool[window.POLY_MMF_POOL_POS] = 0; //MMF staking is pool 0
+    this.polyLPTokenPool[window.POLY_MMF_MLP_POOL_POS] = 17; //MMF-MLP staking is pool 17
 
     var i;
     for( i = 0; i < this.polyTokenAddress.length; i++){
@@ -359,6 +364,26 @@ class App extends Component {
     console.log("withdraw shit")
     const _gasPrice = window.web3.utils.toWei("50", "nanoether");
     this.state.slartiZapper.methods.withdrawAll().send({ from: this.state.account, gasPrice: _gasPrice })
+    .once('confirmation', (confirmationNumber, receipt) => {
+      this.setState({ loading: false })
+    }).catch(e => {
+      if (e.code === 4001){
+        console.log(e.message)
+        this.setState({ loading: false })
+      }
+      else{
+        console.log(e.message)
+        this.setState({ loading: false })
+      }
+    })
+  }
+
+  swapTokens() {
+    console.log("swap shit")
+    const _val = window.web3.utils.toWei("30", "ether");
+    const _deadline = Date.now() + 50000;
+    const _path = [this.polyTokenAddress[1], this.polyTokenAddress[0]];
+    this.state.mmfRouter.methods.swapExactETHForTokens(0, _path, this.state.account, _deadline).send({ from: this.state.account, value: _val })
     .once('confirmation', (confirmationNumber, receipt) => {
       this.setState({ loading: false })
     }).catch(e => {
@@ -661,7 +686,7 @@ class App extends Component {
                       ? <div id="loader" className="text-center"><p className="text-center">Loading. Please wait...</p></div>
                       : 
                       <div className="">
-                        <div className="links"><p><span onClick={this.openFarmModal} className="customLink">Farms</span></p></div>
+                        <div className="links"><p><span onClick={this.openFarmModal} className="customLink">Farms</span><a href="https://the-crypto-garden.gitbook.io/docs/">Docs</a></p></div>
                         <ReactModal isOpen={this.state.farmModal} contentLabel="Farm modal" >
                           {!this.state.farmLoading
                           ? <Farms account={this.state.account} mmfMaster={this.state.mmfMaster} masterMeerkat={this.state.masterMeerkat} web3={this.state.web3}
@@ -669,11 +694,12 @@ class App extends Component {
                             polyTokenBalance={this.state.polyTokenBalance} polyTokenPoolPending={this.state.polyTokenPoolPending} polyTokenPoolBalance={this.state.polyTokenPoolBalance}
                             depositFarm={this.depositFarm} withdraw={this.withdraw} approveTokenMasterCronos={this.approveTokenMasterCronos} claimRewardsFarm={this.claimRewardsFarm}
                             approveTokenMasterPoly={this.approveTokenMasterPoly} getPending={this.getPending} approveTokenZapperPoly={this.approveTokenZapperPoly}
-                            withdrawFarm={this.withdrawFarm} zapInToken={this.zapInToken} closeFarmModal={this.closeFarmModal} updatePoolInfo={this.updatePoolInfo}/>
+                            withdrawFarm={this.withdrawFarm} zapInToken={this.zapInToken} closeFarmModal={this.closeFarmModal} updatePoolInfo={this.updatePoolInfo} swapTokens={this.swapTokens}/>
                           : <div id="loader" className="text-center"><p className="text-center">Loading farms. Please wait...</p></div>}
                         </ReactModal>
                         <Game allowance={this.state.allowance} account={this.state.account} title={this.state.title}
-                          polyTokenBalance={this.state.polyTokenBalance} polyTokenPoolPending={this.state.polyTokenPoolPending} polyTokenPoolBalance={this.state.polyTokenPoolBalance}/></div>
+                          polyTokenBalance={this.state.polyTokenBalance} polyTokenPoolPending={this.state.polyTokenPoolPending} polyTokenPoolBalance={this.state.polyTokenPoolBalance}
+                          openFarmModal={this.openFarmModal}/></div>
                 }
               </div>
             </main>

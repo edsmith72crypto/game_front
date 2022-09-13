@@ -108,11 +108,9 @@
     border-radius: 10px;
     padding: 5px;
     left: 350px;
-    max-width: 90%;
-    right: 400px;
-    min-width: 350px;
+    min-width: 1024px;
     color: #000000;
-    background-color: #349b0b;
+    /*background-color: #349b0b;*/
     border: solid #000000;
     border-width: 1px 1px 0px 1px;
 }
@@ -248,10 +246,26 @@
 }
 
 .cell4 {
+    position: absolute;
     border-color:#696585;
     border-style: groove;
     border-radius: 10px;
     padding: 5px;
-    min-width: 330px;
+    top: 500px;
+    left: 10%;
+    width: 20%;
     color: #000000;
+}
+
+.gameCanvas{
+    float: center;
+    width: 1024px;
+    height: 640px;
+    border: solid #ccc;
+    border-width: 1px 1px 1px 1px;
+    overflow-x: scroll;
+}
+
+.imageLibrary{
+    display: none;
 }

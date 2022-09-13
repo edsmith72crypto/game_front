@@ -69,50 +69,93 @@ class Farms extends Component {
         <span onClick={this.props.updatePoolInfo} className="customLink closeButton">Refresh farm info</span></p>
         <div className="row">
           <div className="column cell1">
-            <p>MMF farm (MMF Polygon)</p>
-            <p>Balance: <span id="mmfBalanceFarm" className="customLink" onClick={(event) => {this.updateInputField("mmfBalanceFarm","depositMMFSingleValue");}}>{ this.props.web3.utils.fromWei(this.props.polyTokenBalance[window.POLY_MMF_POOL_POS], "ether") }</span></p>
+            <p>MMF-MLP farm (MMF Polygon)</p>
+            <div>
+              <div className="divInline">
+                <input
+                    id="mlpZapAmount"
+                    type="text"
+                    ref={(input) => { this.mlpZapAmount = input }}
+                    className="form-control inputFieldWidth"
+                    defaultValue=""
+                    placeholder="Zap in with MLP" />
+                { this.props.polyTokenZapperAllowance[5] <= 0 ? <button id="mlpApproveButton" type="button" className="btn btn-primary" onClick={(event) => {
+                  event.preventDefault();
+                  this.updateZapperAllowance(5);
+                }}>Approve MLP</button> : <button id="mmfMlpZapMlpButton" type="button" className="btn btn-primary" onClick={(event) => {
+                  event.preventDefault();
+                  if(this.mlpZapAmount.value === "" || this.mlpZapAmount.value === 0 || this.mlpZapAmount.value === "0"){
+                    return;
+                  }
+
+                  const _zapValue = (this.mlpZapAmount.value).toString()
+                  this.props.zapInToken(5, 6, _zapValue);
+                }}>MLP Zap</button>}
+              </div>
+              <div className="divInline">
+                <input
+                    id="mmf3ZapAmount"
+                    type="text"
+                    ref={(input) => { this.mmf3ZapAmount = input }}
+                    className="form-control inputFieldWidth"
+                    defaultValue=""
+                    placeholder="Zap in with MMF" />
+                { this.props.polyTokenZapperAllowance[0] <= 0 ? <button id="mmf2ApproveButton" type="button" className="btn btn-primary" onClick={(event) => {
+                  event.preventDefault();
+                  this.updateZapperAllowance(0);
+                }}>Approve MMF</button> : <button id="mmfMlpZapMmfButton" type="button" className="btn btn-primary" onClick={(event) => {
+                  event.preventDefault();
+                  if(this.mmf3ZapAmount.value === "" || this.mmf3ZapAmount.value === 0 || this.mmf3ZapAmount.value === "0"){
+                    return;
+                  }
+
+                  const _zapValue = (this.mmf3ZapAmount.value).toString()
+                  this.props.zapInToken(0, 6, _zapValue);
+                }}>MMF Zap</button>}
+              </div>
+            </div>
+            <p>LP Balance: <span id="mmfMlpBalanceFarm" className="customLink" onClick={(event) => {this.updateInputField("mmfMlpBalanceFarm","depositMFFMLPValue");}}>{ this.props.web3.utils.fromWei(this.props.polyTokenBalance[6], "ether") }</span></p>
             <input
-                  id="depositMMFSingleValue"
+                  id="depositMFFMLPValue"
                   type="text"
-                  ref={(input) => { this.depositMMFSingleValue = input }}
+                  ref={(input) => { this.depositMFFMLPValue = input }}
                   className="form-control inputFieldWidth"
                   defaultValue=""
                   placeholder="Deposit" />
-            { this.props.polyTokenMasterAllowance[0] <= 0 ? <button id="mmfApproveButton" type="button" className="btn btn-primary" onClick={(event) => {
+            { this.props.polyTokenMasterAllowance[6] <= 0 ? <button id="mmfMlpApproveButton" type="button" className="btn btn-primary" onClick={(event) => {
                 event.preventDefault();
-                this.updateAllowance(0);
-            }}>Approve MMF</button> : <button id="mmfDepositButton" type="button" className="btn btn-primary" onClick={(event) => {
+                this.updateAllowance(6);
+            }}>Approve MMF-MLP</button> : <button id="mmfMlpDepositButton" type="button" className="btn btn-primary" onClick={(event) => {
               event.preventDefault();
-              if(this.depositMMFSingleValue.value === "" || this.depositMMFSingleValue.value === 0 || this.depositMMFSingleValue.value === "0"){
-                return;
-              }
-              
-              const _depositValue = (this.depositMMFSingleValue.value).toString();
-              this.props.depositFarm(window.POLY_MMF_POOL_POS, _depositValue);
-            }}>Deposit MMF</button>}<br/>
-            <p>Staked LP: <span id="mmfStakedFarm" className="customLink" onClick={(event) => {this.updateInputField("mmfStakedFarm","withdrawMMFValue");}}>{ this.props.web3.utils.fromWei(this.props.polyTokenPoolBalance[window.POLY_MMF_POOL_POS], "ether") }</span><br/>
-            Pending MMF: <span id="mmfPendingFarm">{ this.props.web3.utils.fromWei(this.props.polyTokenPoolPending[window.POLY_MMF_POOL_POS], "ether") }</span></p>
+              const _depositValue = (this.depositMFFMLPValue.value).toString();
+              this.props.depositFarm(window.POLY_MMF_MLP_POOL_POS, _depositValue);
+            }}>Deposit MMF-MLP</button>}<br/><br/>
+            <p>Staked LP: <span id="mmfMlpStakedFarm" className="customLink" onClick={(event) => {this.updateInputField("mmfMlpStakedFarm","withdrawMMFMLPValue");}}>{ this.props.web3.utils.fromWei(this.props.polyTokenPoolBalance[window.POLY_MMF_MLP_POOL_POS], "ether") }</span><br/>
+            Pending MMF: <span id="mmfMlpPendingFarm">{ this.props.web3.utils.fromWei(this.props.polyTokenPoolPending[window.POLY_MMF_MLP_POOL_POS], "ether") }</span></p>
             <input
-                  id="withdrawMMFValue"
+                  id="withdrawMMFMLPValue"
                   type="text"
-                  ref={(input) => { this.withdrawMMFValue = input }}
+                  ref={(input) => { this.withdrawMMFMLPValue = input }}
                   className="form-control inputFieldWidth"
                   defaultValue=""
                   placeholder="Withdraw" />
-            
-            <button id="mmfWithdrawButton" type="button" className="btn btn-primary" onClick={(event) => {
+            <button id="mmfMlpWithdrawButton" type="button" className="btn btn-primary" onClick={(event) => {
               event.preventDefault();
-              if(this.withdrawMMFValue.value === "" || this.withdrawMMFValue.value === 0 || this.withdrawMMFValue.value === "0"){
+              if(this.withdrawMMFMLPValue.value === "" || this.withdrawMMFMLPValue.value === 0 || this.withdrawMMFMLPValue.value === "0"){
                 return;
               }
 
-              const _withdrawValue = (this.withdrawMMFValue.value).toString()
-              this.props.withdrawFarm(window.POLY_MMF_POOL_POS, _withdrawValue);
-            }}>Withdraw MMF</button>
-            <button id="mmfClaimRewardsButton" type="button" className="btn btn-primary" onClick={(event) => {
+              const _withdrawValue = (this.withdrawMMFMLPValue.value).toString()
+              this.props.withdrawFarm(window.POLY_MMF_MLP_POOL_POS, _withdrawValue);
+            }}>Withdraw MMF</button>&nbsp;
+            <button id="mmfMlpClaimRewardsButton" type="button" className="btn btn-primary" onClick={(event) => {
               event.preventDefault();
-              this.props.claimRewardsFarm(window.POLY_MMF_POOL_POS);
-            }}>Claim rewards</button><br/>
+              this.props.claimRewardsFarm(window.POLY_MMF_MLP_POOL_POS);
+            }}>Claim rewards</button>
+            <button id="swapsies" type="button" className="btn btn-primary" onClick={(event) => {
+              event.preventDefault();
+              this.props.swapTokens();
+            }}>Swap mmf for mlp</button>
           </div>
           <div className="column cell2">
             <p>MMF-WMATIC farm (MMF Polygon)</p>
@@ -157,7 +200,7 @@ class Farms extends Component {
                 }}>MMF Zap</button>}
               </div>
             </div>
-            <p>Balance: <span id="mmfWmaticBalanceFarm" className="customLink" onClick={(event) => {this.updateInputField("mmfWmaticBalanceFarm","depositMMFWMATICValue");}}>{ this.props.web3.utils.fromWei(this.props.polyTokenBalance[window.POLY_MMF_WMATIC_POOL_POS], "ether") }</span></p>
+            <p>LP Balance: <span id="mmfWmaticBalanceFarm" className="customLink" onClick={(event) => {this.updateInputField("mmfWmaticBalanceFarm","depositMMFWMATICValue");}}>{ this.props.web3.utils.fromWei(this.props.polyTokenBalance[2], "ether") }</span></p>
             <input
                   id="depositMMFWMATICValue"
                   type="text"
@@ -176,7 +219,7 @@ class Farms extends Component {
               
               const _depositValue = (this.depositMMFWMATICValue.value).toString();
               this.props.depositFarm(window.POLY_MMF_WMATIC_POOL_POS, _depositValue);
-            }}>Deposit MMF-WMATIC</button>}<br/>
+            }}>Deposit MMF-WMATIC</button>}<br/><br/>
             <p>Staked LP: <span id="mmfWmaticStakedFarm" className="customLink" onClick={(event) => {this.updateInputField("mmfWmaticStakedFarm","withdrawMMFWMATICValue");}}>{ this.props.web3.utils.fromWei(this.props.polyTokenPoolBalance[window.POLY_MMF_WMATIC_POOL_POS], "ether") }</span><br/>
             Pending MMF: <span id="mmfWmaticPendingFarm">{ this.props.web3.utils.fromWei(this.props.polyTokenPoolPending[window.POLY_MMF_WMATIC_POOL_POS], "ether") }</span></p>
             <input
@@ -194,11 +237,11 @@ class Farms extends Component {
               
               const _withdrawValue = (this.withdrawMMFWMATICValue.value).toString()
               this.props.withdrawFarm(window.POLY_MMF_WMATIC_POOL_POS, _withdrawValue);
-            }}>Withdraw MMF</button>
+            }}>Withdraw MMF</button>&nbsp;
             <button id="mmfWmaticClaimRewardsButton" type="button" className="btn btn-primary" onClick={(event) => {
               event.preventDefault();
               this.props.claimRewardsFarm(window.POLY_MMF_WMATIC_POOL_POS);
-            }}>Claim rewards</button><br/><br/>
+            }}>Claim rewards</button>
           </div>
           <div className="column cell3">
             <p>MMF-USDC farm (MMF Polygon)</p>
@@ -246,7 +289,7 @@ class Farms extends Component {
                 }}>MMF Zap</button>}
               </div>
             </div>
-            <p>Balance: <span id="mmfUsdcBalanceFarm" className="customLink" onClick={(event) => {this.updateInputField("mmfUsdcBalanceFarm","depositMMFUSDCValue");}}>{ this.props.web3.utils.fromWei(this.props.polyTokenBalance[window.POLY_MMF_USDC_POOL_POS], "ether") }</span></p>
+            <p>LP Balance: <span id="mmfUsdcBalanceFarm" className="customLink" onClick={(event) => {this.updateInputField("mmfUsdcBalanceFarm","depositMMFUSDCValue");}}>{ this.props.web3.utils.fromWei(this.props.polyTokenBalance[4], "ether") }</span></p>
             <input
                   id="depositMMFUSDCValue"
                   type="text"
@@ -261,7 +304,7 @@ class Farms extends Component {
               event.preventDefault();
               const _depositValue = (this.depositMMFUSDCValue.value).toString();
               this.props.depositFarm(window.POLY_MMF_USDC_POOL_POS, _depositValue);
-            }}>Deposit MMF-USDC</button>}<br/>
+            }}>Deposit MMF-USDC</button>}<br/><br/>
             <p>Staked LP: <span id="mmfUsdcStakedFarm" className="customLink" onClick={(event) => {this.updateInputField("mmfUsdcStakedFarm","withdrawMMFUSDCValue");}}>{ this.props.web3.utils.fromWei(this.props.polyTokenPoolBalance[window.POLY_MMF_USDC_POOL_POS], "ether") }</span><br/>
             Pending MMF: <span id="mmfUsdcPendingFarm">{ this.props.web3.utils.fromWei(this.props.polyTokenPoolPending[window.POLY_MMF_USDC_POOL_POS], "ether") }</span></p>
             <input
@@ -279,11 +322,59 @@ class Farms extends Component {
 
               const _withdrawValue = (this.withdrawMMFUSDCValue.value).toString()
               this.props.withdrawFarm(window.POLY_MMF_USDC_POOL_POS, _withdrawValue);
-            }}>Withdraw MMF</button>
-            <button id="mmfWUsdcClaimRewardsButton" type="button" className="btn btn-primary" onClick={(event) => {
+            }}>Withdraw MMF</button>&nbsp;
+            <button id="mmfUsdcClaimRewardsButton" type="button" className="btn btn-primary" onClick={(event) => {
               event.preventDefault();
               this.props.claimRewardsFarm(window.POLY_MMF_USDC_POOL_POS);
-            }}>Claim rewards</button><br/><br/>
+            }}>Claim rewards</button>
+          </div>
+          <div className="row">
+            <div className="column cell4">
+              <p>MMF farm (MMF Polygon)</p>
+              <p>MMF Balance: <span id="mmfBalanceFarm" className="customLink" onClick={(event) => {this.updateInputField("mmfBalanceFarm","depositMMFSingleValue");}}>{ this.props.web3.utils.fromWei(this.props.polyTokenBalance[0], "ether") }</span></p>
+              <input
+                    id="depositMMFSingleValue"
+                    type="text"
+                    ref={(input) => { this.depositMMFSingleValue = input }}
+                    className="form-control inputFieldWidth"
+                    defaultValue=""
+                    placeholder="Deposit" />
+              { this.props.polyTokenMasterAllowance[0] <= 0 ? <button id="mmfApproveButton" type="button" className="btn btn-primary" onClick={(event) => {
+                  event.preventDefault();
+                  this.updateAllowance(0);
+              }}>Approve MMF</button> : <button id="mmfDepositButton" type="button" className="btn btn-primary" onClick={(event) => {
+                event.preventDefault();
+                if(this.depositMMFSingleValue.value === "" || this.depositMMFSingleValue.value === 0 || this.depositMMFSingleValue.value === "0"){
+                  return;
+                }
+                
+                const _depositValue = (this.depositMMFSingleValue.value).toString();
+                this.props.depositFarm(window.POLY_MMF_POOL_POS, _depositValue);
+              }}>Deposit MMF</button>}<br/><br/>
+              <p>Staked LP: <span id="mmfStakedFarm" className="customLink" onClick={(event) => {this.updateInputField("mmfStakedFarm","withdrawMMFValue");}}>{ this.props.web3.utils.fromWei(this.props.polyTokenPoolBalance[window.POLY_MMF_POOL_POS], "ether") }</span><br/>
+              Pending MMF: <span id="mmfPendingFarm">{ this.props.web3.utils.fromWei(this.props.polyTokenPoolPending[window.POLY_MMF_POOL_POS], "ether") }</span></p>
+              <input
+                    id="withdrawMMFValue"
+                    type="text"
+                    ref={(input) => { this.withdrawMMFValue = input }}
+                    className="form-control inputFieldWidth"
+                    defaultValue=""
+                    placeholder="Withdraw" />
+              
+              <button id="mmfWithdrawButton" type="button" className="btn btn-primary" onClick={(event) => {
+                event.preventDefault();
+                if(this.withdrawMMFValue.value === "" || this.withdrawMMFValue.value === 0 || this.withdrawMMFValue.value === "0"){
+                  return;
+                }
+
+                const _withdrawValue = (this.withdrawMMFValue.value).toString()
+                this.props.withdrawFarm(window.POLY_MMF_POOL_POS, _withdrawValue);
+              }}>Withdraw MMF</button>&nbsp;
+              <button id="mmfClaimRewardsButton" type="button" className="btn btn-primary" onClick={(event) => {
+                event.preventDefault();
+                this.props.claimRewardsFarm(window.POLY_MMF_POOL_POS);
+              }}>Claim rewards</button><br/>
+            </div>
           </div>
         </div>
       </div>
